@@ -15,6 +15,7 @@ DIR_TEST_IMAGES = os.path.join(BASE_DIR, "test_images")
 for directory in [DIR_DATASET, DIR_PROCESSED_IMAGES, DIR_TEST_IMAGES]:
     os.makedirs(directory, exist_ok=True)
 
+
 def load_images(dataset_path):
     images = []
     labels = []
@@ -50,7 +51,9 @@ def detect_cracks(image_path):
     dilated = cv2.dilate(edges, kernel, iterations=1)
     eroded = cv2.erode(dilated, kernel, iterations=1)
 
-    contours, _ = cv2.findContours(eroded, cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_SIMPLE)
+    contours, _ = cv2.findContours(eroded,
+                                   cv2.RETR_EXTERNAL,
+                                   cv2.CHAIN_APPROX_SIMPLE)
 
     min_length = 80
     min_aspect_ratio = 4
@@ -61,8 +64,13 @@ def detect_cracks(image_path):
 
         if length > min_length and aspect_ratio > min_aspect_ratio:
             cv2.rectangle(img, (x, y), (x + w, y + h), (0, 255, 0), 2)
-            cv2.putText(img, f"Length: {length}px", (x, y - 5),
-            cv2.FONT_HERSHEY_SIMPLEX, 0.5, (0, 255, 0), 1)
+            cv2.putText(img,
+                        f"Length: {length}px",
+                        (x, y - 5),
+                        cv2.FONT_HERSHEY_SIMPLEX,
+                        0.5,
+                        (0, 255, 0),
+                        1)
 
     output_path = os.path.join(DIR_PROCESSED_IMAGES,
                                os.path.basename(image_path))
@@ -89,7 +97,10 @@ def predict_image(image_path, model):
 
 def train_model(DIR_DATASET):
     X, y = load_images(DIR_DATASET)
-    X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.2, random_state=42)
+    X_train, X_test, y_train, y_test = (
+        train_test_split(X, y,
+                         test_size=0.2,
+                         random_state=42))
     model = SVC(kernel="rbf", class_weight="balanced")
     model.fit(X_train, y_train)
     y_pred = model.predict(X_test)
@@ -97,20 +108,25 @@ def train_model(DIR_DATASET):
     print(f"Model accuracy: {accuracy * 100:.2f}%")
     return model
 
+
 model = train_model(DIR_DATASET)
 
-user_input = input("Choose an option below (1) Test all images or (2) Enter a test image file name: ")
+user_input = input("Choose an option below (1) Test all images "
+                   "or (2) Enter a test image file name: ")
 number = int(user_input)
 test_images_folder = DIR_TEST_IMAGES
 
 if number == 1:
     for filename in os.listdir(test_images_folder):
-        if filename.endswith(('.jpg', '.png', '.jpeg')):
+        if filename.endswith(('.jpg',
+                              '.png',
+                              '.jpeg')):
             test_image_path = os.path.join(test_images_folder, filename)
             prediction = predict_image(test_image_path, model)
             print(f"Prediction for {filename}: {prediction}")
 elif number == 2:
-    image_filename = input("Enter the test image file name (e.g., image.jpg): ")
+    image_filename = input("Enter the test image file name "
+                           "(e.g., image.jpg): ")
     test_image_path = os.path.join(test_images_folder, image_filename)
     result = predict_image(test_image_path, model)
     print(f"Prediction for the test image: {result}")
